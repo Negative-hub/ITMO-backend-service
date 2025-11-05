@@ -1,3 +1,5 @@
+import puppeteer from 'puppeteer';
+
 /** Создание Express-приложения */
 export default function (express, bodyParser, createReadStream, crypto, http, mongoose) {
   const CORS_HEADERS = {
@@ -90,14 +92,49 @@ export default function (express, bodyParser, createReadStream, crypto, http, mo
 
     // Закрытие соединения
     await mongoose.connection.close();
+  }
 
-    res.status(200).json({
-      message: 'Пользователь успешно добавлен',
-      user: {
-        login: newUser.login,
-        password: newUser.password
-      }
+  async function clickWebPage(req){
+    const { URL } = req.query;
+    // Запуск браузера
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+      ]
     });
+    const page = await browser.newPage();
+
+    // Настройка таймаутов
+    page.setDefaultNavigationTimeout(15000);
+    page.setDefaultTimeout(10000);
+
+    await page.goto(URL, {
+      waitUntil: ['domcontentloaded', 'networkidle2']
+    });
+
+    // Ожидание и клик по кнопке
+    await page.waitForSelector('#bt', { timeout: 10000 });
+    await page.click('#bt');
+
+    // Ожидание результата в поле ввода
+    await page.waitForFunction(
+      () => {
+        const input = document.getElementById('inp');
+        return input && input.value !== '';
+      },
+      { timeout: 10000, polling: 100 }
+    );
+
+    // Получение значения
+    return page.$eval('#inp', input => input.value);
   }
 
   const app = express();
@@ -151,6 +188,15 @@ export default function (express, bodyParser, createReadStream, crypto, http, mo
       res.status(500).send(err.toString());
     }
   });
+
+  app.get('/test/', async (req, res) => {
+    try {
+      const data = await clickWebPage(req);
+      res.set(TEXT_PLAIN_HEADER).send(data);
+    } catch (err) {
+      res.status(500).send(err.toString());
+    }
+  })
 
   // Любой другой маршрут возвращает системный логин
   app.all(/.*/, (_req, res) => {
