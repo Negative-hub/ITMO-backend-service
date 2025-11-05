@@ -24,36 +24,32 @@ function createApp() {
     next();
   }
 
-  async function insertNewUser(req, res) {
+  async function insertNewUser(req) {
+    const { login, password, URL } = req.body;
+
+    // Подключаемся к MongoDB
+    await mongoose.connect(URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useFindAndModify: false,
+      useCreateIndex: true
+    });
+
+    // Определяем схему и модель
     const userSchema = new mongoose.Schema({
       login: String,
       password: String
     });
 
-    // Модель пользователя
     const User = mongoose.model('User', userSchema, 'users');
 
-    const { login, password, URL } = req.body;
-
-    // Проверка наличия обязательных полей
-    if (!login || !password || !URL) {
-      return res.status(400).json({
-        error: 'Необходимы параметры: login, password и URL'
-      });
-    }
-
-    // Подключение к MongoDB
-    await mongoose.connect(URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
+    // Создаем и сохраняем документ
+    const newUser = new User({
+      login,
+      password
     });
 
-    // Создание и сохранение нового пользователя
-    const newUser = new User({ login, password });
     await newUser.save();
-
-    // Закрытие соединения
-    await mongoose.connection.close();
   }
 
   async function clickWebPage(req){
@@ -107,10 +103,9 @@ function createApp() {
     res.set(TEXT_PLAIN_HEADER).send(SYSTEM_LOGIN);
   });
 
-  // POST /req/ с JSON { addr: <url> }
   app.post("/insert/", async (req, res) => {
     try {
-      await insertNewUser(req, res);
+      await insertNewUser(req);
     } catch (err) {
       res.status(500).send(err.toString());
     }
