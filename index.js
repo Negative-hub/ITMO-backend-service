@@ -1,7 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const mongoose = require('mongoose');
-const jsdom = require("jsdom");
+const monogodb = require('mongodb');
 
 /** Создание Express-приложения */
 function createApp() {
@@ -28,68 +27,20 @@ function createApp() {
     const { login, password, URL } = req.body;
 
     // Подключаемся к MongoDB
-    await mongoose.connect(URL, {
+    const client = new monogodb.MongoClient(URL, {
       useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useFindAndModify: false,
-      useCreateIndex: true
+      useUnifiedTopology: true
     });
 
-    // Определяем схему и модель
-    const userSchema = new mongoose.Schema({
-      login: String,
-      password: String
-    });
+    await client.connect();
 
-    const User = mongoose.model('User', userSchema, 'users');
+    const db = client.db();
+    const usersCollection = db.collection('users');
 
-    // Создаем и сохраняем документ
-    const newUser = new User({
-      login,
-      password
-    });
+    // Вставляем документ
+    await usersCollection.insertOne({ login, password });
 
-    await newUser.save();
-  }
-
-  async function clickWebPage(req){
-    const targetUrl = req.query.URL;
-
-    // Получаем HTML целевой страницы
-    const response = await fetch(targetUrl);
-    const html = await response.text();
-
-    // Создаем виртуальный DOM с JSDOM
-    const dom = new jsdom.JSDOM(html, {
-      runScripts: 'dangerously',
-      resources: 'usable'
-    });
-
-    const window = dom.window;
-    const document = window.document;
-
-    // Ждем загрузки DOM
-    await new Promise(resolve => {
-      if (window.document.readyState === 'loading') {
-        window.document.addEventListener('DOMContentLoaded', resolve);
-      } else {
-        resolve();
-      }
-    });
-
-    // Находим кнопку по ID
-    const button = document.getElementById('bt');
-    // Находим поле ввода по ID
-    const input = document.getElementById('inp');
-
-    // Кликаем по кнопке
-    button.click();
-
-    // Даем время на выполнение скриптов после клика
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Получаем значение из поля ввода
-    return input.value;
+    await client.close();
   }
 
   const app = express();
@@ -106,19 +57,11 @@ function createApp() {
   app.post("/insert/", async (req, res) => {
     try {
       await insertNewUser(req);
+      res.status(200).send();
     } catch (err) {
       res.status(500).send(err.toString());
     }
   });
-
-  app.get('/test/', async (req, res) => {
-    try {
-      const data = await clickWebPage(req);
-      res.set(TEXT_PLAIN_HEADER).send(data);
-    } catch (err) {
-      res.status(500).send(err.toString());
-    }
-  })
 
   // Любой другой маршрут возвращает системный логин
   app.all(/.*/, (_req, res) => {
@@ -130,4 +73,4 @@ function createApp() {
 
 
 const app = createApp();
-app.listen(80);
+app.listen(8080);
