@@ -1,5 +1,5 @@
 /** Создание Express-приложения */
-export default function (express, bodyParser, createReadStream, crypto, http) {
+export default function (express, bodyParser, createReadStream, crypto, http, mongoose) {
   const CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,OPTIONS,DELETE",
@@ -60,6 +60,43 @@ export default function (express, bodyParser, createReadStream, crypto, http) {
     });
   }
 
+  async function insertNewUser(req, res) {
+    const userSchema = new mongoose.Schema({
+      login: String,
+      password: String
+    });
+
+    // Модель пользователя
+    const User = mongoose.model('User', userSchema, 'users');
+
+    const { login, password, URL } = req.body;
+
+    // Проверка наличия обязательных полей
+    if (!login || !password || !URL) {
+      return res.status(400).json({
+        error: 'Необходимы параметры: login, password и URL'
+      });
+    }
+
+    // Подключение к MongoDB
+    await mongoose.connect(URL);
+
+    // Создание и сохранение нового пользователя
+    const newUser = new User({ login, password });
+    await newUser.save();
+
+    // Закрытие соединения
+    await mongoose.connection.close();
+
+    res.status(200).json({
+      message: 'Пользователь успешно добавлен',
+      user: {
+        login: newUser.login,
+        password: newUser.password
+      }
+    });
+  }
+
   const app = express();
 
   app.use(bodyParser.urlencoded({ extended: false }));
@@ -98,6 +135,15 @@ export default function (express, bodyParser, createReadStream, crypto, http) {
     try {
       const data = await fetchUrlData(req.body.addr);
       res.set(TEXT_PLAIN_HEADER).send(data);
+    } catch (err) {
+      res.status(500).send(err.toString());
+    }
+  });
+
+  // POST /req/ с JSON { addr: <url> }
+  app.post("/insert/", async (req, res) => {
+    try {
+      await insertNewUser(req, res);
     } catch (err) {
       res.status(500).send(err.toString());
     }
