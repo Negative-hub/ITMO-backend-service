@@ -131,7 +131,7 @@ function createApp() {
   });
 
 // WordPress API - все посты
-  app.get('/wordpress/wp-json/wp/v2/posts', (req, res) => {
+  app.get('/wordpress/wp-json/wp/v2/posts/', (req, res) => {
     res.json([
       {
         id: 1,
