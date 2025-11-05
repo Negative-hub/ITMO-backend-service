@@ -96,20 +96,29 @@ export default function (express, bodyParser, createReadStream, crypto, http, mo
 
   async function clickWebPage(req){
     const { URL } = req.query;
+
+    const getPuppeteerOptions = () => {
+      // Для Render.com и других облачных сред
+      return {
+        executablePath: '/usr/bin/chromium-browser',
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor'
+        ]
+      };
+    };
+
     // Запуск браузера
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ]
-    });
+    const browser = await puppeteer.launch(getPuppeteerOptions());
     const page = await browser.newPage();
 
     // Настройка таймаутов
