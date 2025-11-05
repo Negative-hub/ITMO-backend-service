@@ -1,9 +1,16 @@
 import express from 'express';
 import multer from 'multer';
-import crypto from 'crypto';
+import forge from "node-forge";
 
 const app = express();
-const upload = multer();
+
+// Настройка multer для обработки multipart/form-data
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB лимит
+  },
+});
 
 // GET /login - возвращает логин
 app.get('/login', (req, res) => {
@@ -23,20 +30,23 @@ app.post('/decypher', upload.fields([
       return res.status(400).send('Missing key or secret files');
     }
 
-    const privateKey = keyFile.buffer.toString();
-    const encryptedData = secretFile.buffer.toString();
+    // Получаем содержимое приватного ключа
+    const privateKeyPem = keyFile.buffer.toString("utf8");
 
-    // Расшифровка с использованием приватного ключа
-    const decrypted = crypto.privateDecrypt(
-      {
-        key: privateKey,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-      },
-      Buffer.from(encryptedData, 'base64')
+    // Получаем зашифрованные данные
+    const encryptedData = secretFile.buffer;
+
+    // Парсим приватный ключ
+    const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
+
+    // Расшифровываем данные
+    const decrypted = privateKey.decrypt(
+      encryptedData.toString('binary'),
+      "RSA-OAEP"
     );
 
-    res.type('text/plain').send(decrypted.toString());
-
+    // Возвращаем результат как обычную строку
+    res.type("text/plain").send(decrypted);
   } catch (error) {
     console.error('Decryption error:', error);
     res.status(500).send('Decryption failed: ' + error.message);
@@ -44,15 +54,16 @@ app.post('/decypher', upload.fields([
 });
 
 // Корневой маршрут
-app.get('/', (req, res) => {
-  res.send(`
-    <h1>ITMO Decryption Service</h1>
-    <ul>
-      <li><a href="/login">GET /login</a> - returns login (google_2002)</li>
-      <li>POST /decypher - decrypts data with private key</li>
-    </ul>
-  `);
+app.get("/", (req, res) => {
+  res.type("text/plain").send("ok");
 });
+
+// Обработка ошибок
+app.use((err, req, res, next) => {
+  console.error("Ошибка сервера:", err);
+  res.status(500).type("text/plain").send("Внутренняя ошибка сервера");
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
