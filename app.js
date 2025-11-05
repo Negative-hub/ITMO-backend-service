@@ -79,7 +79,10 @@ export default function (express, bodyParser, createReadStream, crypto, http, mo
     }
 
     // Подключение к MongoDB
-    await mongoose.connect(URL);
+    await mongoose.connect(URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
 
     // Создание и сохранение нового пользователя
     const newUser = new User({ login, password });
