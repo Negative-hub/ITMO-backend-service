@@ -76,7 +76,6 @@ export function createApp(express, bodyParser, createReadStream, crypto, http) {
 
   // Возвращает содержимое текущего файла
   app.get("/code/", async (_req, res) => {
-    console.log(import.meta.url.substring(7))
     const fileContent = await readFileAsync(import.meta.url.substring(7), createReadStream);
     res.set(TEXT_PLAIN_HEADER).send(fileContent);
   });
