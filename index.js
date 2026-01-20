@@ -8,10 +8,12 @@ let browser;
 
 // Инициализация браузера при запуске
 async function initBrowser() {
+  const executablePath = await chromium.executablePath;
+
   browser = await puppeteer.launch({
     args: chromium.args,
     defaultViewport: chromium.defaultViewport,
-    executablePath: '/usr/bin/google-chrome-stable',
+    executablePath,
     headless: chromium.headless,
     ignoreHTTPSErrors: true,
   });
