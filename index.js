@@ -19,6 +19,7 @@ async function initBrowser() {
       '--no-zygote',
       '--use-gl=swiftshader'
     ],
+    executablePath: '/opt/render/.cache/puppeteer/chrome/linux-143.0.7499.192/chrome-linux64/chrome',
   });
 }
 
