@@ -1,5 +1,4 @@
-const chromium = require('chrome-aws-lambda');
-const puppeteer = require('puppeteer-core');
+const puppeteer = require('puppeteer');
 const express = require('express');
 const app = express();
 const PORT = 3000;
@@ -8,14 +7,17 @@ let browser;
 
 // Инициализация браузера при запуске
 async function initBrowser() {
-  const executablePath = await chromium.executablePath;
-
   browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath,
-    headless: chromium.headless,
-    ignoreHTTPSErrors: true,
+    headless: 'new',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--single-process',
+      '--no-zygote'
+    ],
+    // Не указываем executablePath - пусть puppeteer сам находит
   });
 }
 
