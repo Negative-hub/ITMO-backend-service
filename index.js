@@ -1,5 +1,6 @@
-const puppeteer = require('puppeteer');
+const { chromium } = require('playwright');
 const express = require('express');
+
 const app = express();
 const PORT = 3000;
 
@@ -7,19 +8,9 @@ let browser;
 
 // Инициализация браузера при запуске
 async function initBrowser() {
-  const chromePath = '/opt/render/.cache/puppeteer/chrome-linux64/chrome';
-
-  browser = await puppeteer.launch({
-    headless: 'new',
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--single-process',
-      '--no-zygote'
-    ],
-    executablePath: chromePath,
+  browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-dev-shm-usage']
   });
 }
 

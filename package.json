@@ -4,8 +4,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "mkdir -p /opt/render/.cache/puppeteer && cd /opt/render/.cache/puppeteer && wget -q https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/143.0.7499.192/linux64/chrome-linux64.zip && unzip -q chrome-linux64.zip && rm chrome-linux64.zip && chmod +x chrome-linux64/chrome"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +12,6 @@
   "description": "",
   "dependencies": {
     "express": "^5.2.1",
-    "puppeteer": "^24.35.0"
+    "playwright": "^1.44.0"
   }
 }
