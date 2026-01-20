@@ -19,7 +19,6 @@ async function initBrowser() {
       '--no-zygote',
       '--use-gl=swiftshader'
     ],
-    executablePath: '/usr/bin/google-chrome-stable',
   });
 }
 
