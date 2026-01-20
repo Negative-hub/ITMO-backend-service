@@ -9,7 +9,17 @@ let browser;
 async function initBrowser() {
   browser = await puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--single-process',
+      '--no-zygote',
+      '--use-gl=swiftshader'
+    ],
+    executablePath: '/usr/bin/google-chrome-stable',
   });
 }
 
