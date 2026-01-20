@@ -7,6 +7,8 @@ let browser;
 
 // Инициализация браузера при запуске
 async function initBrowser() {
+  const chromePath = '/opt/render/.cache/puppeteer/chrome-linux64/chrome';
+
   browser = await puppeteer.launch({
     headless: 'new',
     args: [
@@ -17,7 +19,7 @@ async function initBrowser() {
       '--single-process',
       '--no-zygote'
     ],
-    // Не указываем executablePath - пусть puppeteer сам находит
+    executablePath: chromePath,
   });
 }
 
