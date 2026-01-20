@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "postinstall": "apt-get update && apt-get install -y libgtk-4-1 libgraphene-1.0-0 libgstgl1.0-0 gstreamer1.0-plugins-base libgstreamer-plugins-base1.0-0 libenchant-2-2 libsecret-1-0 libmanette-0.2-0 libgles2 && npx playwright install chromium --with-deps"
+    "postinstall": "mkdir -p /opt/render/.cache/chrome && cd /opt/render/.cache/chrome && curl -L -o chrome.zip 'https://www.googleapis.com/download/storage/v1/b/chromium-browser-snapshots/o/Linux_x64%2F1082391%2Fchrome-linux.zip?alt=media' && unzip -q chrome.zip && rm chrome.zip && chmod +x chrome-linux/chrome"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +13,6 @@
   "description": "",
   "dependencies": {
     "express": "^5.2.1",
-    "playwright": "^1.44.0"
+    "puppeteer-core": "^24.35.0"
   }
 }
