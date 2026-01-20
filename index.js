@@ -1,42 +1,62 @@
-const express = require('express');
-const { createCanvas } = require('canvas');
-
+const express = require("express");
+const puppeteer = require("puppeteer");
 const app = express();
+const PORT = 3000;
 
-const LOGIN = "google_2002"; // заменить login
+let browser;
 
-app.get('/login', (req, res) => {
-  res.type('text/plain').send(LOGIN);
+// Инициализация браузера при запуске
+async function initBrowser() {
+  browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+}
+
+// Маршрут /login
+app.get("/login", (req, res) => {
+  res.send("google_2002");
 });
 
-app.get('/makeimage', (req, res) => {
-  const width = parseInt(req.query.width) || 100;
-  const height = parseInt(req.query.height) || 100;
+// Маршрут /zombie
+app.get('/zombie/:num', async (req, res) => {
+  try {
+    const num = req.params.num;
 
-  // Ограничиваем максимальный размер
-  const maxSize = 2000;
-  const safeWidth = Math.min(Math.max(width, 1), maxSize);
-  const safeHeight = Math.min(Math.max(height, 1), maxSize);
+    if (!num) {
+      return res.status(400).type('text/plain').send('Missing parameter');
+    }
 
-  // Создаем canvas и изображение
-  const canvas = createCanvas(safeWidth, safeHeight);
-  const ctx = canvas.getContext('2d');
+    const page = await browser.newPage();
+    const targetUrl = `https://kodaktor.ru/g/d7290da?${num}`;
 
-  // Заполняем изображение (пример)
-  ctx.fillStyle = `rgb(${safeWidth % 255}, ${safeHeight % 255}, 100)`;
-  ctx.fillRect(0, 0, safeWidth, safeHeight);
+    await page.goto(targetUrl, { waitUntil: 'networkidle2' });
+    await page.waitForSelector('button', { timeout: 5000 });
+    await page.click('button');
+    await new Promise(r => setTimeout(r, 1000));
 
-  // Добавляем текст с размерами
-  ctx.fillStyle = 'white';
-  ctx.font = '20px Arial';
-  ctx.fillText(`${safeWidth}x${safeHeight}`, 10, 30);
+    const result = await page.evaluate(() => {
+      return document.title;
+    });
 
-  // Отправляем как PNG
-  res.set('Content-Type', 'image/png');
-  canvas.createPNGStream().pipe(res);
+    await page.close();
+    res.type('text/plain').send(result);
+
+  } catch (error) {
+    console.error('Error:', error.message);
+    res.status(500).type('text/plain').send('Error: ' + error.message);
+  }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Сервер запущен на порту ${PORT}`);
-});
+
+// Запуск сервера
+initBrowser()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to initialize browser:", err);
+    process.exit(1);
+  });
