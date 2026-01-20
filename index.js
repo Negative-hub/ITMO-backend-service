@@ -1,5 +1,6 @@
-const express = require("express");
-const puppeteer = require("puppeteer");
+const chromium = require('chrome-aws-lambda');
+const puppeteer = require('puppeteer-core');
+const express = require('express');
 const app = express();
 const PORT = 3000;
 
@@ -8,18 +9,11 @@ let browser;
 // Инициализация браузера при запуске
 async function initBrowser() {
   browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--disable-software-rasterizer',
-      '--single-process',
-      '--no-zygote',
-      '--use-gl=swiftshader'
-    ],
-    executablePath: '/opt/render/.cache/puppeteer/chrome/linux-143.0.7499.192/chrome-linux64/chrome',
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: '/usr/bin/google-chrome-stable',
+    headless: chromium.headless,
+    ignoreHTTPSErrors: true,
   });
 }
 

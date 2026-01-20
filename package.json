@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "install-deps": "npx puppeteer browsers install chrome",
-    "postinstall": "npm run install-deps"
+    "install-deps": "npm install --legacy-peer-deps"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +13,7 @@
   "description": "",
   "dependencies": {
     "express": "^5.2.1",
-    "puppeteer": "^24.35.0"
+    "puppeteer-core": "^10.1.0",
+    "chrome-aws-lambda": "^10.1.0"
   }
 }
