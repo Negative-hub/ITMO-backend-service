@@ -1,29 +1,9 @@
-const puppeteer = require('puppeteer-core');
+const axios = require('axios');
+const { JSDOM } = require('jsdom');
 const express = require('express');
 
 const app = express();
 const PORT = 3000;
-
-let browser;
-
-// Инициализация браузера при запуске
-async function initBrowser() {
-  const chromePath = '/opt/render/.cache/chrome/chrome-linux/chrome';
-
-  browser = await puppeteer.launch({
-    executablePath: chromePath,
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--single-process',
-      '--no-zygote',
-      '--disable-software-rasterizer'
-    ]
-  });
-}
 
 // Маршрут /login
 app.get("/login", (req, res) => {
@@ -34,41 +14,42 @@ app.get("/login", (req, res) => {
 app.get('/zombie/:num', async (req, res) => {
   try {
     const num = req.params.num;
-
-    if (!num) {
-      return res.status(400).type('text/plain').send('Missing parameter');
-    }
-
-    const page = await browser.newPage();
     const targetUrl = `https://kodaktor.ru/g/d7290da?${num}`;
 
-    await page.goto(targetUrl, { waitUntil: 'networkidle2' });
-    await page.waitForSelector('button', { timeout: 5000 });
-    await page.click('button');
-    await new Promise(r => setTimeout(r, 1000));
-
-    const result = await page.evaluate(() => {
-      return document.title;
+    const response = await axios.get(targetUrl);
+    const dom = new JSDOM(response.data, {
+      url: targetUrl,
+      runScripts: 'dangerously', // Включаем выполнение JS
+      resources: "usable"
     });
 
-    await page.close();
+    const window = dom.window;
+    const document = window.document;
+
+    // Ждем загрузки
+    await new Promise(resolve => {
+      window.addEventListener('load', resolve);
+      setTimeout(resolve, 3000);
+    });
+
+    // Ищем кнопку
+    const button = document.querySelector('button');
+    if (button) {
+      button.click();
+
+      // Ждем обновления
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    const result = document.title;
     res.type('text/plain').send(result);
 
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error:', error);
     res.status(500).type('text/plain').send('Error: ' + error.message);
   }
 });
 
-
-// Запуск сервера
-initBrowser()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("Failed to initialize browser:", err);
-    process.exit(1);
-  });
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});

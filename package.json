@@ -4,8 +4,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "mkdir -p /opt/render/.cache/chrome && cd /opt/render/.cache/chrome && curl -L -o chrome.zip 'https://www.googleapis.com/download/storage/v1/b/chromium-browser-snapshots/o/Linux_x64%2F1082391%2Fchrome-linux.zip?alt=media' && unzip -q chrome.zip && rm chrome.zip && chmod +x chrome-linux/chrome && ls -la /opt/render/.cache/chrome/ && find /opt/render/.cache/chrome -name '*chrome*' -type f"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +12,7 @@
   "description": "",
   "dependencies": {
     "express": "^5.2.1",
-    "puppeteer-core": "^24.35.0"
+    "axios": "^1.6.0",
+    "jsdom": "^23.0.1"
   }
 }
